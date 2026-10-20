@@ -1,0 +1,90 @@
+SURF CAM - LOCAL SETUP ON A NEW DEVICE (Windows + VS Code)
+==========================================================
+
+What you need first
+-------------------
+- Python 3.11 (python.org) - check "Add python.exe to PATH" during install
+- Git for Windows (includes Git Bash)
+- VS Code with the "Python" extension (by Microsoft)
+- No administrator rights are needed for any step below.
+
+
+1. Get the code
+---------------
+Open a terminal in the folder where you keep projects and run:
+
+    git clone <your GitHub repo URL> "Surf Cam Code"
+
+Then in VS Code: File > Open Folder... > select "Surf Cam Code".
+If VS Code asks whether you trust the folder, click "Trust".
+
+
+2. Create the virtual environment (sandbox)
+-------------------------------------------
+The .venv folder is NOT stored in Git, so each device builds its own.
+In the VS Code terminal (Ctrl+`):
+
+    python -m venv .venv
+
+
+3. Activate it
+--------------
+Git Bash:
+    source .venv/Scripts/activate
+
+PowerShell:
+    .venv\Scripts\Activate.ps1
+
+You should see (.venv) at the start of the prompt.
+
+If PowerShell says "running scripts is disabled on this system":
+- The repo's .vscode/settings.json already starts VS Code PowerShell
+  terminals with "-ExecutionPolicy Bypass" for this folder only.
+  Close the terminal and open a new one.
+- Or run this once in the current terminal (affects only that window):
+      Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+
+
+4. Install the packages
+-----------------------
+With (.venv) active:
+
+    pip install opencv-python ultralytics
+
+This also installs PyTorch (CPU build) and other dependencies.
+It is large and can take 10-20 minutes with little output.
+Do NOT press Ctrl+C - wait for "Successfully installed ...".
+
+
+5. Point VS Code at the sandbox
+-------------------------------
+Ctrl+Shift+P > "Python: Select Interpreter" > choose the .venv one
+(e.g. "Python 3.11 ('.venv')"). New terminals will auto-activate it.
+
+
+6. Verify
+---------
+    python -c "import cv2, torch, ultralytics; print(cv2.__version__, torch.__version__, ultralytics.__version__)"
+
+Optional - downloads the YOLO26 model (yolo26n.pt) and runs a test image:
+
+    python -c "from ultralytics import YOLO; print(YOLO('yolo26n.pt')('https://ultralytics.com/images/bus.jpg')[0].verbose())"
+
+Expected output includes something like "4 persons, 1 bus".
+
+
+7. Run the app
+--------------
+Start the Nikon Webcam Utility and connect the camera by USB, then:
+
+    python app.py
+
+Press 'q' in the video window to quit.
+If the camera is not found, change cv2.VideoCapture(1) in app.py to 0 or 2.
+
+
+Notes
+-----
+- yolo26n.pt downloads automatically on first run; it is ignored by Git
+  (.gitignore has *.pt), as are .venv/, __pycache__/, and runs/.
+- To leave the sandbox: deactivate

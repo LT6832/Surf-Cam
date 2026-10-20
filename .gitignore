@@ -1,0 +1,12 @@
+# Virtual environment
+.venv/
+
+# Model weights (downloaded automatically by ultralytics)
+*.pt
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Ultralytics output folders
+runs/
