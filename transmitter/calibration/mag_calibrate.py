@@ -4,16 +4,20 @@ import math
 import time
 from pathlib import Path
 
+
+PROJECT_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_DIR))
+
 from smbus2 import SMBus
 
-from gps_dashboard import initialize_sensors, read_magnetometer
+from sensors import initialize_sensors, read_magnetometer
 
 
 CALIBRATION_TIME = 60
 SAMPLE_INTERVAL = 0.05
 
 OUTPUT_FILE = (
-    Path(__file__).resolve().parent / "mag_calibration.json"
+    PROJECT_DIR/ "mag_calibration.json"
 )
 
 
