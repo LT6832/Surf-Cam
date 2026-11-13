@@ -13,7 +13,7 @@ from smbus2 import SMBus
 import board
 import adafruit_bmp3xx
 
-from gps_dashboard import (
+from sensors import (
     GPS_PORT,
     GPS_BAUD,
     BARO_ADDRESS,
