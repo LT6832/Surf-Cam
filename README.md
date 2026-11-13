@@ -77,6 +77,6 @@ Ongoing development includes computer vision, integration of telemetry with visu
 
 # License
 
-Surf-Cam is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+Surf-Cam is licensed under the [GNU Affero General Public License v3.0](LICENSE.txt).
 
 Copyright information is available in [COPYRIGHT.md](COPYRIGHT.md).
