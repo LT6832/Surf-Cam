@@ -9,9 +9,9 @@ def run(port="COM5", baud=460800, hz=10, seconds=60, distance= 0.0, note=""):
     Args:
         port: Serial port connected to the receiver.
         baud: Serial baud rate.
-        hz: Requested packet frequency recorded in the log; does not set Pi rate.
+        hz: Requested telemetry frequency sent to the Pi over ELRS.
         seconds: Test duration in seconds, or zero to run until interrupted.
-        distance: Measured distance from the receiver in meters.
+        distance: Measured distance from the receiver in feet.
         note: Optional text included in each CSV row.
 
     Returns:

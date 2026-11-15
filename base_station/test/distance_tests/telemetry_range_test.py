@@ -37,13 +37,19 @@ def choose(message, choices):
 
 def main():
     """Parses serial options and prompts the user to configure and run a test."""
+
     parser = argparse.ArgumentParser(description="Surf-Cam range testing menu")
     parser.add_argument("--port", default="COM5")
     parser.add_argument("--baud", type=int, default=460800)
     args = parser.parse_args()
     print("\n=== SURF-CAM RANGE TESTER ===")
     mode = choose("Test mode", ["Stationary", "Continuous"])
-    hz = int(choose("Requested frequency (Pi currently fixed at 10 Hz)", ["10 Hz"]))
+    hz = int(
+        choose(
+            "Requested transmission frequency",
+            ["1 Hz", "5 Hz", "10 Hz", "20 Hz", "50 Hz"],
+        ).split()[0]
+    )
     duration = choose(
         "Duration",
         ["30 seconds", "60 seconds", "120 seconds", "300 seconds", "Until stopped"],
