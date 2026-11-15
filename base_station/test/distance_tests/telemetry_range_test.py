@@ -65,7 +65,7 @@ def main():
                 break
             except ValueError:
                 print("Enter a nonnegative number.")
-        print(f"\nStarting {mode} at {distance} m, {hz} Hz, {duration}.")
+        print(f"\nStarting {mode} at {distance} ft, {hz} Hz, {duration}.")
         if input("Continue? [Y/n]: ").strip().lower() not in ("", "y", "yes"):
             return
         stationary_test.run(
