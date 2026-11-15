@@ -55,7 +55,8 @@ desktop.ini
 **/mag_calibration.json
 
 # Generated range-testing results
-telemetry_range_results*.csv
+base_station/test/distance_tests/*.csv
+base_station/test/distance_tests/results/
 
 # Computer vision model weights
 *.pt
