@@ -1,4 +1,3 @@
-
 import json
 import math
 import struct
@@ -7,7 +6,6 @@ import sys
 import time
 import zlib
 from pathlib import Path
-
 import serial
 from smbus2 import SMBus
 import board
@@ -27,7 +25,8 @@ from sensors import (
 )
 
 from calibration.gyro_calibrate import calibrate_gyro
-
+from drivers.elrs_radio import ElrsRadio
+from drivers.rate_controller import RateController
 
 # ============================================================
 # CONFIGURATION
@@ -38,20 +37,15 @@ PROJECT_DIR = Path(__file__).resolve().parent
 RADIO_PORT = "/dev/ttyUSB0"
 RADIO_BAUD = 460800
 
-SEND_INTERVAL = 0.1
 SENSOR_INTERVAL = 0.05
 BARO_INTERVAL = 0.5
 
-SYNC = b"\xAA\x55\xAA\x55"
+SYNC = b"\xaa\x55\xaa\x55"
 PACKET_FORMAT = "<Iiih3h3h3hBB"
 
-CALIBRATION_FILE = (
-    PROJECT_DIR / "calibration" / "imu_calibration.json"
-)
+CALIBRATION_FILE = PROJECT_DIR / "calibration" / "imu_calibration.json"
 
-MAG_CALIBRATION_FILE = (
-    PROJECT_DIR / "calibration" / "mag_calibration.json"
-)
+MAG_CALIBRATION_FILE = PROJECT_DIR / "calibration" / "mag_calibration.json"
 
 STATIONARY_SAMPLES = 30
 STATIONARY_SAMPLE_INTERVAL = 0.05
@@ -68,6 +62,7 @@ GRAVITY = 9.80665
 # GPS CONFIGURATION
 # ============================================================
 
+
 def configure_gps():
     for script in ["gps_baud.py", "gps_config.py"]:
         print(f"Running {script}...", flush=True)
@@ -82,6 +77,7 @@ def configure_gps():
 # ============================================================
 # CALIBRATION LOADING
 # ============================================================
+
 
 def load_saved_gyro_bias():
     try:
@@ -127,40 +123,24 @@ def load_mag_calibration():
             calibration = json.load(file)
 
         # Accept either naming convention.
-        offsets = calibration.get(
-            "offsets",
-            calibration.get("mag_offset_ut")
-        )
+        offsets = calibration.get("offsets", calibration.get("mag_offset_ut"))
 
-        scales = calibration.get(
-            "scales",
-            calibration.get("mag_scale")
-        )
+        scales = calibration.get("scales", calibration.get("mag_scale"))
 
         if offsets is None or scales is None:
-            raise ValueError(
-                "Magnetometer offsets/scales not found"
-            )
+            raise ValueError("Magnetometer offsets/scales not found")
 
         if len(offsets) != 3 or len(scales) != 3:
-            raise ValueError(
-                "Expected 3 magnetometer values per axis"
-            )
+            raise ValueError("Expected 3 magnetometer values per axis")
 
         offsets = [float(v) for v in offsets]
         scales = [float(v) for v in scales]
 
-        if not all(
-            math.isfinite(v) for v in offsets + scales
-        ):
-            raise ValueError(
-                "Non-finite magnetometer calibration"
-            )
+        if not all(math.isfinite(v) for v in offsets + scales):
+            raise ValueError("Non-finite magnetometer calibration")
 
         if any(v <= 0 for v in scales):
-            raise ValueError(
-                "Magnetometer scales must be positive"
-            )
+            raise ValueError("Magnetometer scales must be positive")
 
         print(
             "Loaded magnetometer calibration.",
@@ -179,23 +159,20 @@ def load_mag_calibration():
 
     except (OSError, ValueError, KeyError, TypeError) as error:
         print(
-            f"WARNING: Magnetometer calibration "
-            f"not loaded: {error}",
+            f"WARNING: Magnetometer calibration " f"not loaded: {error}",
             flush=True,
         )
         return [0.0, 0.0, 0.0], [1.0, 1.0, 1.0]
 
 
 def calibrate_magnetometer(mag, offsets, scales):
-    return [
-        (mag[i] - offsets[i]) * scales[i]
-        for i in range(3)
-    ]
+    return [(mag[i] - offsets[i]) * scales[i] for i in range(3)]
 
 
 # ============================================================
 # STATIONARY DETECTION
 # ============================================================
+
 
 def is_stationary(
     bus,
@@ -216,11 +193,7 @@ def is_stationary(
     # Use the saved bias only for checking movement.
     # The actual calibration is performed separately.
 
-    check_bias = (
-        saved_bias
-        if saved_bias is not None
-        else [0.0, 0.0, 0.0]
-    )
+    check_bias = saved_bias if saved_bias is not None else [0.0, 0.0, 0.0]
 
     for _ in range(STATIONARY_SAMPLES):
         read_motion_sensors(
@@ -246,14 +219,11 @@ def is_stationary(
     # Check gyro rotation rate.
 
     for gyro in gyroscopes:
-        rotation_rate = math.sqrt(
-            sum(value * value for value in gyro)
-        )
+        rotation_rate = math.sqrt(sum(value * value for value in gyro))
 
         if rotation_rate > MAX_GYRO_RATE:
             print(
-                f"Movement detected: "
-                f"gyro {rotation_rate:.2f} °/s",
+                f"Movement detected: " f"gyro {rotation_rate:.2f} °/s",
                 flush=True,
             )
             return False
@@ -261,14 +231,11 @@ def is_stationary(
     # Check acceleration magnitude.
 
     for accel in accelerations:
-        total = math.sqrt(
-            sum(value * value for value in accel)
-        )
+        total = math.sqrt(sum(value * value for value in accel))
 
         if abs(total - GRAVITY) > MAX_ACCEL_DEVIATION:
             print(
-                f"Movement detected: "
-                f"accel {total:.2f} m/s²",
+                f"Movement detected: " f"accel {total:.2f} m/s²",
                 flush=True,
             )
             return False
@@ -276,17 +243,13 @@ def is_stationary(
     # Check acceleration variation on each axis.
 
     for axis in range(3):
-        values = [
-            accel[axis]
-            for accel in accelerations
-        ]
+        values = [accel[axis] for accel in accelerations]
 
         axis_range = max(values) - min(values)
 
         if axis_range > MAX_ACCEL_RANGE:
             print(
-                f"Movement detected on axis {axis}: "
-                f"{axis_range:.2f} m/s²",
+                f"Movement detected on axis {axis}: " f"{axis_range:.2f} m/s²",
                 flush=True,
             )
             return False
@@ -297,6 +260,7 @@ def is_stationary(
 # ============================================================
 # STARTUP CALIBRATION
 # ============================================================
+
 
 def startup_calibration(
     bus,
@@ -335,14 +299,9 @@ def startup_calibration(
                 if (
                     gyro_bias is not None
                     and len(gyro_bias) == 3
-                    and all(
-                        math.isfinite(float(v))
-                        for v in gyro_bias
-                    )
+                    and all(math.isfinite(float(v)) for v in gyro_bias)
                 ):
-                    gyro_bias = [
-                        float(v) for v in gyro_bias
-                    ]
+                    gyro_bias = [float(v) for v in gyro_bias]
 
                     print(
                         "Gyroscope calibration complete.",
@@ -374,8 +333,7 @@ def startup_calibration(
         return saved_bias
 
     print(
-        "WARNING: No saved gyro bias. "
-        "Using zero bias.",
+        "WARNING: No saved gyro bias. " "Using zero bias.",
         flush=True,
     )
 
@@ -385,6 +343,7 @@ def startup_calibration(
 # ============================================================
 # PACKET ENCODING
 # ============================================================
+
 
 def scaled(value, scale, low=-32768, high=32767):
     return max(
@@ -397,32 +356,17 @@ def make_packet(sequence, data):
     latitude = data["latitude"]
     longitude = data["longitude"]
 
-    lat = (
-        int(round(latitude * 1e7))
-        if latitude is not None else 0
-    )
+    lat = int(round(latitude * 1e7)) if latitude is not None else 0
 
-    lon = (
-        int(round(longitude * 1e7))
-        if longitude is not None else 0
-    )
+    lon = int(round(longitude * 1e7)) if longitude is not None else 0
 
     speed = scaled(data["speed"], 100)
 
-    accel = [
-        scaled(v, 100)
-        for v in data["accel"]
-    ]
+    accel = [scaled(v, 100) for v in data["accel"]]
 
-    gyro = [
-        scaled(v, 100)
-        for v in data["gyro"]
-    ]
+    gyro = [scaled(v, 100) for v in data["gyro"]]
 
-    mag = [
-        scaled(v, 10)
-        for v in data["mag"]
-    ]
+    mag = [scaled(v, 10) for v in data["mag"]]
 
     payload = struct.pack(
         PACKET_FORMAT,
@@ -439,16 +383,13 @@ def make_packet(sequence, data):
 
     checksum = zlib.crc32(payload) & 0xFFFFFFFF
 
-    return (
-        SYNC
-        + payload
-        + struct.pack("<I", checksum)
-    )
+    return SYNC + payload + struct.pack("<I", checksum)
 
 
 # ============================================================
 # MAIN
 # ============================================================
+
 
 def main():
     print(
@@ -461,9 +402,7 @@ def main():
 
         # Load accelerometer calibration.
 
-        accel_offset, accel_scale = (
-            load_accel_calibration()
-        )
+        accel_offset, accel_scale = load_accel_calibration()
 
         print(
             "Loaded accelerometer calibration.",
@@ -480,9 +419,7 @@ def main():
 
         # Load magnetometer calibration.
 
-        mag_offsets, mag_scales = (
-            load_mag_calibration()
-        )
+        mag_offsets, mag_scales = load_mag_calibration()
 
         # Configure GPS.
 
@@ -514,7 +451,7 @@ def main():
         )
 
         sequence = 0
-
+        rate_controller = RateController()
         last_sensor_read = 0.0
         last_baro_read = 0.0
         last_send = time.monotonic()
@@ -525,11 +462,9 @@ def main():
             timeout=0.02,
         ) as gps:
 
-            with serial.Serial(
-                RADIO_PORT,
-                RADIO_BAUD,
-                timeout=0.1,
-                write_timeout=1,
+            with ElrsRadio(
+                port=RADIO_PORT,
+                baud_rate=RADIO_BAUD,
             ) as radio:
 
                 print(
@@ -541,42 +476,39 @@ def main():
                     flush=True,
                 )
                 print(
-                    "Sending calibrated telemetry "
-                    "at 10 Hz.",
+                    f"Sending calibrated telemetry at {rate_controller.hz} Hz.",
                     flush=True,
                 )
 
                 try:
                     while True:
                         now = time.monotonic()
+                        radio.poll_commands(rate_controller)
 
                         # ------------------------------
                         # GPS
                         # ------------------------------
 
-                        line = gps.readline().decode(
-                            "ascii",
-                            errors="replace",
-                        ).strip()
+                        line = (
+                            gps.readline()
+                            .decode(
+                                "ascii",
+                                errors="replace",
+                            )
+                            .strip()
+                        )
 
-                        if line.startswith(
-                            ("$GNRMC", "$GPRMC")
-                        ):
+                        if line.startswith(("$GNRMC", "$GPRMC")):
                             parse_rmc(line, data)
 
-                        elif line.startswith(
-                            ("$GNGGA", "$GPGGA")
-                        ):
+                        elif line.startswith(("$GNGGA", "$GPGGA")):
                             parse_gga(line, data)
 
                         # ------------------------------
                         # IMU AND MAGNETOMETER
                         # ------------------------------
 
-                        if (
-                            now - last_sensor_read
-                            >= SENSOR_INTERVAL
-                        ):
+                        if now - last_sensor_read >= SENSOR_INTERVAL:
                             read_motion_sensors(
                                 bus,
                                 data,
@@ -585,28 +517,19 @@ def main():
                                 accel_scale,
                             )
 
-                            read_magnetometer(
-                                bus, data
-                            )
+                            read_magnetometer(bus, data)
 
                             # Apply saved magnetometer
                             # calibration before sending.
 
-                            data["mag"] = (
-                                calibrate_magnetometer(
-                                    data["mag"],
-                                    mag_offsets,
-                                    mag_scales,
-                                )
+                            data["mag"] = calibrate_magnetometer(
+                                data["mag"],
+                                mag_offsets,
+                                mag_scales,
                             )
 
-                            data["mag_total"] = (
-                                math.sqrt(
-                                    sum(
-                                        v * v
-                                        for v in data["mag"]
-                                    )
-                                )
+                            data["mag_total"] = math.sqrt(
+                                sum(v * v for v in data["mag"])
                             )
 
                             last_sensor_read = now
@@ -615,13 +538,8 @@ def main():
                         # BAROMETER
                         # ------------------------------
 
-                        if (
-                            now - last_baro_read
-                            >= BARO_INTERVAL
-                        ):
-                            read_barometer(
-                                bmp, data
-                            )
+                        if now - last_baro_read >= BARO_INTERVAL:
+                            read_barometer(bmp, data)
 
                             last_baro_read = now
 
@@ -629,23 +547,10 @@ def main():
                         # TRANSMIT
                         # ------------------------------
 
-                        if (
-                            now - last_send
-                            >= SEND_INTERVAL
-                        ):
-                            packet = make_packet(
-                                sequence, data
-                            )
+                        if now - last_send >= rate_controller.interval_seconds:
+                            packet = make_packet(sequence, data)
 
-                            radio.write(packet)
-
-                            if sequence % 10 == 0:
-                                print(
-                                    f"Sent #{sequence} "
-                                    f"({len(packet)} bytes) "
-                                    f"GPS fix: {data['fix']}",
-                                    flush=True,
-                                )
+                            radio.send_packet(packet)
 
                             sequence += 1
                             last_send = now
