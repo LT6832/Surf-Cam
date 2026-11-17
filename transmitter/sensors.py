@@ -9,6 +9,7 @@ from pathlib import Path
 
 GPS_PORT = "/dev/serial0"
 GPS_BAUD = 460800
+GPS_RATE = 10
 
 IMU_ADDRESS = 0x6A
 MAG_ADDRESS = 0x1C

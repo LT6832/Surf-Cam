@@ -3,7 +3,11 @@ import struct
 import time
 import zlib
 from datetime import datetime
-
+from config import (
+    RADIO_PORT,
+    RADIO_BAUD,
+    DASHBOARD_REFRESH_RATE,
+)
 import serial
 from rich.console import Console, Group
 from rich.live import Live
@@ -15,9 +19,9 @@ from rich.text import Text
 # SERIAL SETTINGS
 # ============================================================
 
-PORT = "COM5"
-BAUD = 460800
-REFRESH_RATE = 10
+PORT = RADIO_PORT
+BAUD = RADIO_BAUD
+REFRESH_RATE = DASHBOARD_REFRESH_RATE
 
 SYNC = b"\xaa\x55\xaa\x55"
 PACKET_FORMAT = "<Iiih3h3h3hBB"

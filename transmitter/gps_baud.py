@@ -2,10 +2,11 @@
 import serial
 import struct
 import time
+from sensors import GPS_PORT, GPS_BAUD
 
 GPS_PORT = "/dev/serial0"
 OLD_BAUD = 9600
-NEW_BAUD = 460800
+NEW_BAUD = GPS_BAUD
 
 
 def create_ubx_message(msg_class, msg_id, payload):

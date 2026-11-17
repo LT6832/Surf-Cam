@@ -4,6 +4,7 @@ import argparse
 import importlib
 import continuous_test
 import stationary_test
+from range_common import RADIO_BAUD, RADIO_PORT
 
 
 def choose(message, choices):
@@ -39,8 +40,8 @@ def main():
     """Parses serial options and prompts the user to configure and run a test."""
 
     parser = argparse.ArgumentParser(description="Surf-Cam range testing menu")
-    parser.add_argument("--port", default="COM5")
-    parser.add_argument("--baud", type=int, default=460800)
+    parser.add_argument("--port", default=RADIO_PORT)
+    parser.add_argument("--baud", type=int, default=RADIO_BAUD)
     args = parser.parse_args()
     print("\n=== SURF-CAM RANGE TESTER ===")
     mode = choose("Test mode", ["Stationary", "Continuous"])

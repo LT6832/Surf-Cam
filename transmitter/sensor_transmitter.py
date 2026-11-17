@@ -35,7 +35,6 @@ from drivers.rate_controller import RateController
 PROJECT_DIR = Path(__file__).resolve().parent
 
 RADIO_PORT = "/dev/ttyUSB0"
-RADIO_BAUD = 460800
 
 SENSOR_INTERVAL = 0.05
 BARO_INTERVAL = 0.5
@@ -464,7 +463,6 @@ def main():
 
             with ElrsRadio(
                 port=RADIO_PORT,
-                baud_rate=RADIO_BAUD,
             ) as radio:
 
                 print(

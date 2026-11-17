@@ -6,7 +6,14 @@ import math
 import struct
 import time
 import zlib
+import sys
 from pathlib import Path
+BASE_STATION_DIR = Path(__file__).resolve().parents[2]
+
+if str(BASE_STATION_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_STATION_DIR))
+
+from config import RADIO_PORT, RADIO_BAUD
 
 SYNC = b"\xaa\x55\xaa\x55"
 PAYLOAD = struct.Struct("<Iiih3h3h3hBB")

@@ -2,11 +2,7 @@
 import serial
 import struct
 import time
-
-GPS_PORT = "/dev/serial0"
-GPS_BAUD = 460800
-#GPS_Rate is in hz
-GPS_RATE = 10
+from sensors import GPS_BAUD, GPS_PORT, GPS_RATE
 
 
 def create_ubx_message(msg_class, msg_id, payload):
