@@ -3,7 +3,7 @@
 from range_common import run_receiver
 
 
-def run(port="COM5", baud=460800, hz=10, seconds=60, distance= 0.0, note=""):
+def run(port="COM5", baud=9600, hz=10, seconds=60, distance= 0.0, note=""):
     """Runs a stationary range test at a manually measured distance.
 
     Args:

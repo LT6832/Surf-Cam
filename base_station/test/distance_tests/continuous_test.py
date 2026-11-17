@@ -3,7 +3,7 @@
 from range_common import run_receiver
 
 
-def run(port="COM5", baud=460800, hz=10, seconds=0, note="", baseline_samples=100):
+def run(port="COM5", baud=9600, hz=10, seconds=0, note="", baseline_samples=100):
     """Runs a continuous range test using an averaged GPS starting position.
 
     Args:
