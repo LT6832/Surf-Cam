@@ -35,7 +35,7 @@ from drivers.rate_controller import RateController
 PROJECT_DIR = Path(__file__).resolve().parent
 
 RADIO_PORT = "/dev/ttyUSB0"
-RADIO_BAUD = 460800
+RADIO_BAUD = 9600
 
 SENSOR_INTERVAL = 0.05
 BARO_INTERVAL = 0.5
