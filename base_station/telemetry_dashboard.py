@@ -16,7 +16,7 @@ from rich.text import Text
 # ============================================================
 
 PORT = "COM5"
-BAUD = 9600
+BAUD = 460800
 REFRESH_RATE = 10
 
 SYNC = b"\xaa\x55\xaa\x55"
