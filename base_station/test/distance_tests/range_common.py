@@ -221,7 +221,7 @@ class Receiver:
         return 100 * self.missing / total if total else 0.0
 
 
-def output_path(mode):
+def output_path(mode, note):
     """Creates the results directory and builds a timestamped CSV path.
 
     Args:
@@ -233,7 +233,7 @@ def output_path(mode):
     directory = Path(__file__).resolve().parent / "results"
     directory.mkdir(exist_ok=True)
     stamp = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S_%f")
-    return directory / f"{mode}_{stamp}.csv"
+    return directory / f"{note}_{mode}_{stamp}.csv"
 
 
 def log_event(writer, receiver, mode, hz, distance, event, note):
@@ -343,7 +343,7 @@ def run_receiver(
     positions = []
     baseline = None
     last_distance = distance
-    output = output_path(mode)
+    output = output_path(mode, note)
     with serial.Serial(port_name, baud, timeout=0.1) as port, output.open(
         "w", newline="", encoding="utf-8"
     ) as file:

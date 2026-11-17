@@ -1,6 +1,7 @@
 """Interactive launcher for Surf-Cam ELRS range tests."""
 
 import argparse
+import importlib
 import continuous_test
 import stationary_test
 
@@ -19,8 +20,7 @@ def choose(message, choices):
         KeyboardInterrupt: If the user cancels the menu or interrupts input.
     """
     try:
-        import questionary
-
+        questionary = importlib.import_module("questionary")
         result = questionary.select(message, choices=choices).ask()
         if result is None:
             raise KeyboardInterrupt

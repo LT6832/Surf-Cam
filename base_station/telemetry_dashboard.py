@@ -429,10 +429,10 @@ def render(state):
         "Gyroscope",
         vector(gyro, "°/s"),
     )
-    sensors.add_row(
-        "Magnetometer (raw)",
-        vector(mag, "µT"),
-    )
+    # sensors.add_row(
+    #     "Magnetometer (raw)",
+    #     vector(mag, "µT"),
+    # )
     sensors.add_row(
         "Magnetometer (cal)",
         vector(corrected_mag, "µT"),
@@ -441,10 +441,10 @@ def render(state):
         "Accel magnitude",
         number(magnitude(accel), 2, " m/s²"),
     )
-    sensors.add_row(
-        "Raw mag magnitude",
-        number(magnitude(mag), 2, " µT"),
-    )
+    # sensors.add_row(
+    #     "Raw mag magnitude",
+    #     number(magnitude(mag), 2, " µT"),
+    # )
     sensors.add_row(
         "Cal mag magnitude",
         number(magnitude(corrected_mag), 2, " µT"),
